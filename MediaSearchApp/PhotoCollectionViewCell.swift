@@ -31,12 +31,20 @@ class PhotoCollectionViewCell: UICollectionViewCell {
         // Загрузка изображения по URL
         if let url = URL(string: photo.urls.small) {
             URLSession.shared.dataTask(with: url) { data, response, error in
-                if let data = data {
-                    DispatchQueue.main.async {
-                        self.imageView.image = UIImage(data: data)
-                    }
+                if let error = error {
+                    print("Ошибка загрузки изображения: \(error)")
+                    return
+                }
+                guard let data = data else {
+                    print("Нет данных для изображения")
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.imageView.image = UIImage(data: data)
                 }
             }.resume()
+        } else {
+            print("Неправильный URL изображения: \(photo.urls.small)")
         }
     }
 }

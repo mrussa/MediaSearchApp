@@ -3,8 +3,8 @@ import Foundation
 struct UnsplashAPIClient {
     private let accessKey = "m9Rt6aY2G_jMImnpVYbbMD_kJBInYQ3F4LIikHdygqU"  
 
-    func searchPhotos(query: String, completion: @escaping (Result<[Photo], Error>) -> Void) {
-        guard let url = URL(string: "https://api.unsplash.com/search/photos?query=\(query)&client_id=\(accessKey)") else {
+    func searchPhotos(query: String, limit: Int = 30, completion: @escaping (Result<[Photo], Error>) -> Void) {
+        guard let url = URL(string: "https://api.unsplash.com/search/photos?query=\(query)&per_page=\(limit)&client_id=\(accessKey)") else {
             return
         }
 
@@ -37,6 +37,11 @@ struct Photo: Codable {
     let id: String
     let description: String?
     let urls: PhotoURLs
+    let user: User // Информация о пользователе
+    
+    var author: String {
+        return user.name
+    }
 }
 
 struct PhotoURLs: Codable {
@@ -44,3 +49,6 @@ struct PhotoURLs: Codable {
     let regular: String
 }
 
+struct User: Codable {
+    let name: String
+}
