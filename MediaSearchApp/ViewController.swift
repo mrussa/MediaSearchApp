@@ -1,17 +1,14 @@
 import UIKit
 
-class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
+class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     var searchBar: UISearchBar!
     var collectionView: UICollectionView!
-    var searchHistory: [String] = []
+    var segmentedControl: UISegmentedControl!
     var searchResults: [Photo] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Загрузка истории поиска
-        loadSearchHistory()
         
         // Создание UISearchBar
         searchBar = UISearchBar()
@@ -19,11 +16,16 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         searchBar.delegate = self
         navigationItem.titleView = searchBar
         
+        // Создание и настройка UISegmentedControl
+        segmentedControl = UISegmentedControl(items: ["2 плитки", "1 плитка"])
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged), for: .valueChanged)
+        navigationItem.titleView = segmentedControl
+        
         // Настройка макета UICollectionView
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 10
         layout.minimumInteritemSpacing = 10
-        layout.itemSize = CGSize(width: (view.frame.size.width / 2) - 15, height: 200)
         
         // Создание UICollectionView
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
@@ -36,29 +38,15 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         view.addSubview(collectionView)
     }
     
-    // Загрузка истории поиска из UserDefaults
-    func loadSearchHistory() {
-        searchHistory = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
+    @objc func segmentedControlValueChanged(_ sender: UISegmentedControl) {
+        collectionView.collectionViewLayout.invalidateLayout()
+        collectionView.reloadData() // Перезагружаем данные, чтобы отобразить их с новыми размерами
     }
-    
-    // Сохранение истории поиска в UserDefaults
-    func saveSearchHistory(query: String) {
-        if !searchHistory.contains(query) {
-            searchHistory.insert(query, at: 0)
-            if searchHistory.count > 5 {
-                searchHistory.removeLast()
-            }
-            UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
-        }
-    }
-    
+
     // UISearchBarDelegate: Начало поиска
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         guard let query = searchBar.text, !query.isEmpty else { return }
         searchBar.resignFirstResponder()
-        
-        // Сохранение истории поиска
-        saveSearchHistory(query: query)
         
         // Отправка запроса на Unsplash API
         let apiClient = UnsplashAPIClient()
@@ -86,5 +74,24 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         let photo = searchResults[indexPath.item]
         cell.configure(with: photo)
         return cell
+    }
+    
+    // UICollectionViewDelegateFlowLayout: Размеры ячеек
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if segmentedControl.selectedSegmentIndex == 0 {
+            let width = (view.bounds.width - 30) / 2
+            return CGSize(width: width, height: width)
+        } else {
+            let width = view.bounds.width - 20
+            let height = width * 1.5
+            return CGSize(width: width, height: height)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedPhoto = searchResults[indexPath.item]
+        let detailVC = PhotoDetailViewController()
+        detailVC.photo = selectedPhoto
+        navigationController?.pushViewController(detailVC, animated: true)
     }
 }

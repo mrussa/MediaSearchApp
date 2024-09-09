@@ -25,6 +25,9 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     }
 
     private func setupUI() {
+        // Установка фона для основного view контроллера
+        view.backgroundColor = .white
+
         // Настройка UISearchBar
         searchBar = UISearchBar()
         searchBar.delegate = self
@@ -35,19 +38,32 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         segmentedControl = UISegmentedControl(items: ["2 плитки", "1 плитка"])
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.addTarget(self, action: #selector(viewModeChanged), for: .valueChanged)
+        segmentedControl.backgroundColor = .white
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
-        segmentedControl.selectedSegmentTintColor = .white // Цвет выделенного сегмента
-        segmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .normal)
+        segmentedControl.selectedSegmentTintColor = .systemGray // Изменение фона для выделенного сегмента
+        segmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .normal) // Цвет текста невыделенного сегмента
+        segmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected) // Цвет текста выделенного сегмента
         view.addSubview(segmentedControl)
         
+        // Настройка UINavigationBar
+        if let navigationBar = self.navigationController?.navigationBar {
+                let appearance = UINavigationBarAppearance()
+                appearance.backgroundColor = .white // Цвет фона для UINavigationBar
+                navigationBar.standardAppearance = appearance
+                navigationBar.scrollEdgeAppearance = appearance
+            }
+
         // Настройка UISegmentedControl для сортировки
         sortSegmentedControl = UISegmentedControl(items: ["Популярные", "Новые"])
         sortSegmentedControl.selectedSegmentIndex = 0
         sortSegmentedControl.addTarget(self, action: #selector(sortChanged), for: .valueChanged)
+        sortSegmentedControl.backgroundColor = .white
         sortSegmentedControl.translatesAutoresizingMaskIntoConstraints = false
-        sortSegmentedControl.selectedSegmentTintColor = .white // Цвет выделенного сегмента
-        sortSegmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .normal)
+        sortSegmentedControl.selectedSegmentTintColor = .systemGray // Изменение фона выделенного сегмента
+        sortSegmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .normal) // Цвет текста невыделенного сегмента
+        sortSegmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected) // Цвет текста выделенного сегмента
         view.addSubview(sortSegmentedControl)
+
         
         // Настройка UITableView для истории запросов
         historyTableView = UITableView()

@@ -8,16 +8,33 @@ class PhotoCollectionViewCell: UICollectionViewCell {
         super.init(frame: frame)
         
         // Создание UIImageView для превью изображения
-        imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: contentView.frame.size.width, height: contentView.frame.size.height - 40))
+        imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(imageView)
         
         // Создание UILabel для описания изображения
-        descriptionLabel = UILabel(frame: CGRect(x: 5, y: contentView.frame.size.height - 40, width: contentView.frame.size.width - 10, height: 40))
+        descriptionLabel = UILabel()
         descriptionLabel.numberOfLines = 2
         descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(descriptionLabel)
+        
+        // Настройка констрейнтов для элементов
+        NSLayoutConstraint.activate([
+            // Констрейнты для imageView
+            imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            imageView.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.8), // Занимает 80% высоты ячейки
+            
+            // Констрейнты для descriptionLabel
+            descriptionLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 5),
+            descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 5),
+            descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -5),
+            descriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5),
+        ])
     }
     
     required init?(coder: NSCoder) {
@@ -48,5 +65,3 @@ class PhotoCollectionViewCell: UICollectionViewCell {
         }
     }
 }
-
-
