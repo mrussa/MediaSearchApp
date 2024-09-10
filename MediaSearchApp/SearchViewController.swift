@@ -1,12 +1,13 @@
 import UIKit
 
 class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDelegateFlowLayout {
-
+    
     private var searchBar: UISearchBar!
     private var historyTableView: UITableView!
     private var collectionView: UICollectionView!
     
     private var searchHistory: [String] = []
+    private var filteredHistory: [String] = [] // Для хранения отфильтрованной истории
     private var searchResults: [Photo] = []
     private var apiClient = UnsplashAPIClient()
     
@@ -31,8 +32,16 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         // Настройка UISearchBar
         searchBar = UISearchBar()
         searchBar.delegate = self
+        searchBar.searchTextField.autocorrectionType = .yes
+        searchBar.searchTextField.autocapitalizationType = .none
+        searchBar.searchTextField.textContentType = .name
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(searchBar)
+        
+        // Отказ от клавиатуры при перетаскивании или нажатии вне поля поиска
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
 
         // Настройка UISegmentedControl для выбора вида отображения
         segmentedControl = UISegmentedControl(items: ["2 плитки", "1 плитка"])
@@ -47,11 +56,11 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         
         // Настройка UINavigationBar
         if let navigationBar = self.navigationController?.navigationBar {
-                let appearance = UINavigationBarAppearance()
-                appearance.backgroundColor = .white // Цвет фона для UINavigationBar
-                navigationBar.standardAppearance = appearance
-                navigationBar.scrollEdgeAppearance = appearance
-            }
+            let appearance = UINavigationBarAppearance()
+            appearance.backgroundColor = .white // Цвет фона для UINavigationBar
+            navigationBar.standardAppearance = appearance
+            navigationBar.scrollEdgeAppearance = appearance
+        }
 
         // Настройка UISegmentedControl для сортировки
         sortSegmentedControl = UISegmentedControl(items: ["Популярные", "Новые"])
@@ -64,13 +73,12 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         sortSegmentedControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected) // Цвет текста выделенного сегмента
         view.addSubview(sortSegmentedControl)
 
-        
         // Настройка UITableView для истории запросов
         historyTableView = UITableView()
-        historyTableView.frame = CGRect(x: 0, y: 100, width: view.frame.width, height: 200)
         historyTableView.dataSource = self
         historyTableView.delegate = self
         historyTableView.isHidden = true
+        historyTableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(historyTableView)
 
         // Настройка UICollectionView для результатов поиска
@@ -79,7 +87,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         layout.minimumInteritemSpacing = 10
         layout.minimumLineSpacing = 10
         
-        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .white
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -103,6 +111,13 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             sortSegmentedControl.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 8),
             sortSegmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             sortSegmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            
+            historyTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            historyTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            historyTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            historyTableView.bottomAnchor.constraint(equalTo: sortSegmentedControl.topAnchor, constant: -8),
+            
 
             // Констрейнты для UICollectionView
             collectionView.topAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 16),
@@ -111,6 +126,12 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
+
+    
+    @objc private func dismissKeyboard() {
+           searchBar.resignFirstResponder()
+           historyTableView.isHidden = true // Скрываем историю поиска при нажатии вне поля
+       }
 
     
     // Сохранение истории поиска в UserDefaults
@@ -123,6 +144,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         if let savedHistory = UserDefaults.standard.array(forKey: "searchHistory") as? [String] {
             searchHistory = savedHistory
         }
+        filteredHistory = searchHistory
         historyTableView.reloadData()
     }
     
@@ -132,8 +154,20 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         searchHistory.insert(query, at: 0)
         searchHistory = Array(Set(searchHistory)).prefix(5).map { $0 }
         saveSearchHistory()
-        searchBar.resignFirstResponder()
         searchPhotos(query: query)
+        searchBar.resignFirstResponder()
+        historyTableView.isHidden = true
+    }
+    
+    // Фильтрация истории поиска при изменении текста в поисковой строке
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty {
+            filteredHistory = searchHistory
+        } else {
+            filteredHistory = searchHistory.filter { $0.lowercased().contains(searchText.lowercased()) }
+        }
+        historyTableView.isHidden = filteredHistory.isEmpty
+        historyTableView.reloadData()
     }
     
     private func searchPhotos(query: String, page: Int = 1) {
@@ -157,20 +191,21 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
 
     // UITableViewDataSource
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return searchHistory.count
+        return filteredHistory.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "HistoryCell")
-        cell.textLabel?.text = searchHistory[indexPath.row]
+        cell.textLabel?.text = filteredHistory[indexPath.row]
         return cell
     }
-    
-    // UITableViewDelegate
+
+    // Выбор из истории
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let query = searchHistory[indexPath.row]
-        searchBar.text = query
-        searchPhotos(query: query)
+        let query = filteredHistory[indexPath.row]
+        searchBar.text = query // Пользователь вручную выбирает историю
+        searchPhotos(query: query) // Выполнить поиск
+        historyTableView.isHidden = true // Скрыть таблицу истории после выбора
     }
 
     // UICollectionViewDataSource
@@ -211,7 +246,6 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         collectionView.reloadData()
     }
 
-    
     @objc func sortChanged() {
         currentSort = (sortSegmentedControl.selectedSegmentIndex == 0) ? "relevant" : "latest"
         searchBarSearchButtonClicked(searchBar) // Перезапуск поиска
@@ -235,4 +269,4 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             loadMorePhotos()
         }
     }
-}
+} 
