@@ -7,6 +7,9 @@ struct UnsplashAPIClient {
     func searchPhotos(query: String, page: Int = 1, sort: String = "relevant", width: Int = 400, height: Int = 300, completion: @escaping (Result<[Photo], Error>) -> Void) {
         let urlString = "https://api.unsplash.com/search/photos?query=\(query)&order_by=\(sort)&per_page=\(limit)&client_id=\(accessKey)&w=\(width)&h=\(height)"
         
+
+
+        
         guard let url = URL(string: urlString) else {
             return
         }

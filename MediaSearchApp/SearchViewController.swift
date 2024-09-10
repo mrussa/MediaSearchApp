@@ -8,6 +8,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     
     private var searchHistory: [String] = []
     private var filteredHistory: [String] = [] // Для хранения отфильтрованной истории
+
     private var searchResults: [Photo] = []
     private var apiClient = UnsplashAPIClient()
     
@@ -112,13 +113,12 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             sortSegmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             sortSegmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-            
+            // Констрейнты для UITableView (historyTableView)
             historyTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             historyTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             historyTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            historyTableView.bottomAnchor.constraint(equalTo: sortSegmentedControl.topAnchor, constant: -8),
+            historyTableView.heightAnchor.constraint(equalToConstant: 200), // Установим фиксированную высоту для истории
             
-
             // Констрейнты для UICollectionView
             collectionView.topAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 16),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -127,13 +127,11 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         ])
     }
 
-    
     @objc private func dismissKeyboard() {
-           searchBar.resignFirstResponder()
-           historyTableView.isHidden = true // Скрываем историю поиска при нажатии вне поля
-       }
+        searchBar.resignFirstResponder()
+        historyTableView.isHidden = true // Скрываем историю поиска при нажатии вне поля
+    }
 
-    
     // Сохранение истории поиска в UserDefaults
     private func saveSearchHistory() {
         UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
@@ -150,14 +148,14 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     
     // UISearchBarDelegate
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        guard let query = searchBar.text, !query.isEmpty else { return }
-        searchHistory.insert(query, at: 0)
-        searchHistory = Array(Set(searchHistory)).prefix(5).map { $0 }
-        saveSearchHistory()
-        searchPhotos(query: query)
-        searchBar.resignFirstResponder()
-        historyTableView.isHidden = true
-    }
+           guard let query = searchBar.text, !query.isEmpty else { return }
+           searchHistory.insert(query, at: 0)
+           searchHistory = Array(Set(searchHistory)).prefix(5).map { $0 }
+           saveSearchHistory()
+           searchPhotos(query: query)
+           searchBar.resignFirstResponder()
+           historyTableView.isHidden = true
+       }
     
     // Фильтрация истории поиска при изменении текста в поисковой строке
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -193,80 +191,76 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return filteredHistory.count
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "HistoryCell")
         cell.textLabel?.text = filteredHistory[indexPath.row]
         return cell
     }
 
-    // Выбор из истории
+    // UITableViewDelegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let query = filteredHistory[indexPath.row]
-        searchBar.text = query // Пользователь вручную выбирает историю
-        searchPhotos(query: query) // Выполнить поиск
-        historyTableView.isHidden = true // Скрыть таблицу истории после выбора
+        let selectedQuery = filteredHistory[indexPath.row]
+        searchBar.text = selectedQuery
+        searchPhotos(query: selectedQuery)
+        searchBar.resignFirstResponder()
+        historyTableView.isHidden = true
     }
 
     // UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return searchResults.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCollectionViewCell
         let photo = searchResults[indexPath.item]
         cell.configure(with: photo)
         return cell
     }
-
-    // UICollectionViewDelegate
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let selectedPhoto = searchResults[indexPath.item]
-        let detailVC = PhotoDetailViewController()
-        detailVC.photo = selectedPhoto
-        navigationController?.pushViewController(detailVC, animated: true)
-    }
     
     // UICollectionViewDelegateFlowLayout
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if segmentedControl.selectedSegmentIndex == 0 {
-            // Для двух плиток в ряд
-            let width = (collectionView.bounds.width - 30) / 2
-            return CGSize(width: width, height: width)
-        } else {
-            // Для одной плитки, во всю ширину экрана
-            let width = collectionView.bounds.width - 20
-            return CGSize(width: width, height: 400) // Можно подкорректировать высоту для удобства
-        }
+        let padding: CGFloat = 10
+        let availableWidth = view.frame.width - padding * 3
+        let isGridMode = segmentedControl.selectedSegmentIndex == 0
+        let width = isGridMode ? availableWidth / 2 : availableWidth
+        return CGSize(width: width, height: width)
     }
+
+    // UICollectionViewDelegate
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    let selectedPhoto = searchResults[indexPath.item]
+    let detailVC = PhotoDetailViewController()
+    detailVC.photo = selectedPhoto
+    navigationController?.pushViewController(detailVC, animated: true)
+        }
     
-    @objc func viewModeChanged() {
-        collectionView.collectionViewLayout.invalidateLayout()
+    // Обработка UISegmentedControl для изменения вида
+    @objc private func viewModeChanged() {
         collectionView.reloadData()
     }
-
-    @objc func sortChanged() {
-        currentSort = (sortSegmentedControl.selectedSegmentIndex == 0) ? "relevant" : "latest"
-        searchBarSearchButtonClicked(searchBar) // Перезапуск поиска
-    }
-
-    // Добавление метода для загрузки дополнительных данных
-    private func loadMorePhotos() {
-        guard !isLoadingMoreData && currentPage < totalPages else { return }
-        isLoadingMoreData = true
-        currentPage += 1
-        searchPhotos(query: searchBar.text ?? "", page: currentPage)
-    }
-
-    // UIScrollViewDelegate для отслеживания конца списка
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let offsetY = scrollView.contentOffset.y
-        let contentHeight = scrollView.contentSize.height
-        let height = scrollView.frame.size.height
-
-        if offsetY > contentHeight - height {
-            loadMorePhotos()
+    
+    // Обработка изменения сортировки
+    @objc private func sortChanged() {
+        currentSort = sortSegmentedControl.selectedSegmentIndex == 0 ? "relevant" : "latest"
+        if let query = searchBar.text, !query.isEmpty {
+            searchPhotos(query: query)
         }
     }
-} 
+
+    // Пагинация
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let position = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let scrollViewHeight = scrollView.frame.size.height
+
+        if position > (contentHeight - scrollViewHeight - 100), !isLoadingMoreData, currentPage < totalPages {
+            isLoadingMoreData = true
+            currentPage += 1
+            if let query = searchBar.text, !query.isEmpty {
+                searchPhotos(query: query, page: currentPage)
+            }
+        }
+    }
+}

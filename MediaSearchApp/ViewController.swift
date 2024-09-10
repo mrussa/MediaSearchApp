@@ -10,12 +10,6 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Создание UISearchBar
-        searchBar = UISearchBar()
-        searchBar.placeholder = "Введите запрос для поиска"
-        searchBar.delegate = self
-        navigationItem.titleView = searchBar
-        
         // Создание и настройка UISegmentedControl
         segmentedControl = UISegmentedControl(items: ["2 плитки", "1 плитка"])
         segmentedControl.selectedSegmentIndex = 0
