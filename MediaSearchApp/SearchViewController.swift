@@ -4,25 +4,24 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     
     // MARK: - UI Elements
 
-    private var searchBar: UISearchBar!
-    private var historyTableView: UITableView!
-    private var collectionView: UICollectionView!
-    private var activityIndicator: UIActivityIndicatorView!
-    private var errorLabel: UILabel!
+    var searchBar: UISearchBar!
+    var historyTableView: UITableView!
+    var collectionView: UICollectionView!
+    var activityIndicator: UIActivityIndicatorView!
+    var errorLabel: UILabel!
     
-    private var searchHistory: [String] = []
-    private var filteredHistory: [String] = []
-
-    private var searchResults: [Photo] = []
-    private var apiClient = UnsplashAPIClient()
+    var searchHistory: [String] = []
+    var filteredHistory: [String] = []
+    var searchResults: [Photo] = []
+    var apiClient = UnsplashAPIClient()
     
-    private var segmentedControl: UISegmentedControl!
-    private var sortSegmentedControl: UISegmentedControl!
-    private var currentSort: String = "relevant"
+    var segmentedControl: UISegmentedControl!
+    var sortSegmentedControl: UISegmentedControl!
+    var currentSort: String = "relevant"
     
-    private var currentPage: Int = 1
-    private var totalPages: Int = 1
-    private var isLoadingMoreData = false
+    var currentPage: Int = 1
+    var totalPages: Int = 1
+    var isLoadingMoreData = false
 
     // MARK: - View Lifecycle
 
@@ -158,11 +157,11 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         historyTableView.isHidden = true
     }
 
-    private func saveSearchHistory() {
+    func saveSearchHistory() {
         UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
     }
 
-    private func loadSearchHistory() {
+    func loadSearchHistory() {
         if let savedHistory = UserDefaults.standard.array(forKey: "searchHistory") as? [String] {
             searchHistory = savedHistory
         }
@@ -175,7 +174,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
            guard let query = searchBar.text, !query.isEmpty else { return }
            searchHistory.insert(query, at: 0)
-           searchHistory = Array(Set(searchHistory)).prefix(5).map { $0 }
+           searchHistory = Array(NSOrderedSet(array: searchHistory)).prefix(5).map { $0 as! String }
            saveSearchHistory()
            searchPhotos(query: query)
            searchBar.resignFirstResponder()
@@ -194,7 +193,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     
     // MARK: - Search Logic
     
-    private func searchPhotos(query: String) {
+    func searchPhotos(query: String) {
             activityIndicator.startAnimating()
             errorLabel.isHidden = true
             collectionView.isHidden = true

@@ -34,53 +34,99 @@ class PhotoDetailViewController: UIViewController {
     // MARK: - UI Setup
     private func setupUI() {
         // UIImageView для отображения изображения
-        imageView = UIImageView(frame: CGRect(x: 0, y: 100, width: view.bounds.width, height: view.bounds.height / 2))
+        imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.isHidden = true
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(imageView)
         
         // UILabel для описания
-        descriptionLabel = UILabel(frame: CGRect(x: 20, y: imageView.frame.maxY + 20, width: view.bounds.width - 40, height: 100))
+        descriptionLabel = UILabel()
         descriptionLabel.numberOfLines = 0
         descriptionLabel.font = UIFont.systemFont(ofSize: 16)
         descriptionLabel.isHidden = true
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(descriptionLabel)
         
         // UILabel для автора
-        authorLabel = UILabel(frame: CGRect(x: 20, y: descriptionLabel.frame.maxY + 10, width: view.bounds.width - 40, height: 30))
+        authorLabel = UILabel()
         authorLabel.font = UIFont.boldSystemFont(ofSize: 16)
         authorLabel.isHidden = true
+        authorLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(authorLabel)
         
         // Кнопка сохранения изображения
         saveButton = UIButton(type: .system)
         saveButton.setTitle("Сохранить изображение", for: .normal)
         saveButton.addTarget(self, action: #selector(saveImageToGallery), for: .touchUpInside)
-        saveButton.frame = CGRect(x: 20, y: view.bounds.height - 80, width: view.bounds.width - 40, height: 50)
         saveButton.isHidden = true
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(saveButton)
         
         // Кнопка для поделиться
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareImage))
         navigationItem.rightBarButtonItem = shareButton
+        
+        setupConstraints()
+    }
+    
+    // MARK: - Setup Constraints
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            // Constraints для imageView
+            imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            imageView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.5),
+            
+            // Constraints для descriptionLabel
+            descriptionLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 20),
+            descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            descriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Constraints для authorLabel
+            authorLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 10),
+            authorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            authorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Constraints для saveButton
+            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            saveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            saveButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
     
     private func setupActivityIndicator() {
         // Индикатор активности для состояния загрузки
         activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.center = view.center
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
         view.addSubview(activityIndicator)
+        
+        // Установка ограничений для индикатора активности
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
     }
     
     private func setupErrorLabel() {
         // UILabel для отображения ошибок
-        errorLabel = UILabel(frame: CGRect(x: 20, y: view.center.y - 20, width: view.bounds.width - 40, height: 40))
+        errorLabel = UILabel()
         errorLabel.textColor = .red
         errorLabel.textAlignment = .center
         errorLabel.font = UIFont.systemFont(ofSize: 18)
         errorLabel.isHidden = true
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(errorLabel)
+        
+        // Установка ограничений для errorLabel
+        NSLayoutConstraint.activate([
+            errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
     }
     
     // MARK: - Data Loading Methods
