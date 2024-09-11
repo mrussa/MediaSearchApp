@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - ViewController
+
 class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     var searchBar: UISearchBar!
@@ -7,42 +9,44 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
     var segmentedControl: UISegmentedControl!
     var searchResults: [Photo] = []
     
+    // MARK: - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Создание и настройка UISegmentedControl
+        // MARK: - UISegmentedControl Setup
         segmentedControl = UISegmentedControl(items: ["2 плитки", "1 плитка"])
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged), for: .valueChanged)
         navigationItem.titleView = segmentedControl
         
-        // Настройка макета UICollectionView
+        // MARK: - UICollectionView Layout Setup
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 10
         layout.minimumInteritemSpacing = 10
         
-        // Создание UICollectionView
+        // MARK: - UICollectionView Setup
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(PhotoCollectionViewCell.self, forCellWithReuseIdentifier: "PhotoCell")
         collectionView.backgroundColor = .white
         
-        // Добавление UICollectionView на экран
+        // Adding UICollectionView to the view
         view.addSubview(collectionView)
     }
     
+    // MARK: - UISegmentedControl Value Changed
     @objc func segmentedControlValueChanged(_ sender: UISegmentedControl) {
         collectionView.collectionViewLayout.invalidateLayout()
-        collectionView.reloadData() // Перезагружаем данные, чтобы отобразить их с новыми размерами
+        collectionView.reloadData() // Reload data to apply new item sizes
     }
 
-    // UISearchBarDelegate: Начало поиска
+    // MARK: - UISearchBarDelegate: Search Button Clicked
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         guard let query = searchBar.text, !query.isEmpty else { return }
         searchBar.resignFirstResponder()
         
-        // Отправка запроса на Unsplash API
+        // Sending request to Unsplash API
         let apiClient = UnsplashAPIClient()
         apiClient.searchPhotos(query: query) { [weak self] result in
             switch result {
@@ -57,12 +61,12 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         }
     }
     
-    // UICollectionViewDataSource: Количество элементов
+    // MARK: - UICollectionViewDataSource: Number of Items
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return searchResults.count
     }
     
-    // UICollectionViewDataSource: Создание ячейки
+    // MARK: - UICollectionViewDataSource: Cell for Item
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCollectionViewCell
         let photo = searchResults[indexPath.item]
@@ -70,7 +74,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         return cell
     }
     
-    // UICollectionViewDelegateFlowLayout: Размеры ячеек
+    // MARK: - UICollectionViewDelegateFlowLayout: Size for Item
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if segmentedControl.selectedSegmentIndex == 0 {
             let width = (view.bounds.width - 30) / 2
@@ -82,6 +86,7 @@ class ViewController: UIViewController, UISearchBarDelegate, UICollectionViewDel
         }
     }
     
+    // MARK: - UICollectionViewDelegate: Did Select Item
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedPhoto = searchResults[indexPath.item]
         let detailVC = PhotoDetailViewController()
