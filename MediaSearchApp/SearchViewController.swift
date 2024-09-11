@@ -7,6 +7,8 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     private var searchBar: UISearchBar!
     private var historyTableView: UITableView!
     private var collectionView: UICollectionView!
+    private var activityIndicator: UIActivityIndicatorView!
+    private var errorLabel: UILabel!
 
     private var searchHistory: [String] = []
     private var filteredHistory: [String] = []
@@ -67,6 +69,20 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         sortSegmentedControl.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(sortSegmentedControl)
 
+        // Настройка индикатора загрузки
+        activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(activityIndicator)
+
+        // Настройка UILabel для отображения ошибок
+        errorLabel = UILabel()
+        errorLabel.textAlignment = .center
+        errorLabel.textColor = .red
+        errorLabel.numberOfLines = 0
+        errorLabel.isHidden = true
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(errorLabel)
+
         // Настройка UITableView для истории запросов
         historyTableView = UITableView()
         historyTableView.dataSource = self
@@ -110,7 +126,15 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             collectionView.topAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 16),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            errorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            errorLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            errorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
     }
 
@@ -158,15 +182,26 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     // MARK: - Search Logic
 
     private func searchPhotos(query: String) {
+        activityIndicator.startAnimating()
+        errorLabel.isHidden = true
+        collectionView.isHidden = true
+
         apiClient.searchPhotos(query: query, sort: currentSort) { result in
-            switch result {
-            case .success(let photos):
-                self.searchResults = photos
-                DispatchQueue.main.async {
+            DispatchQueue.main.async {
+                self.activityIndicator.stopAnimating()
+                switch result {
+                case .success(let photos):
+                    self.searchResults = photos
+                    self.collectionView.isHidden = photos.isEmpty
                     self.collectionView.reloadData()
+                    if photos.isEmpty {
+                        self.errorLabel.text = "Нет результатов"
+                        self.errorLabel.isHidden = false
+                    }
+                case .failure(let error):
+                    self.errorLabel.text = "Произошла ошибка: \(error.localizedDescription)"
+                    self.errorLabel.isHidden = false
                 }
-            case .failure(let error):
-                print("Error: \(error)")
             }
         }
     }
