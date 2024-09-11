@@ -1,36 +1,91 @@
-//
-//  MediaSearchAppTests.swift
-//  MediaSearchAppTests
-//
-//  Created by  on 07/09/2024.
-//
-
 import XCTest
 @testable import MediaSearchApp
 
-final class MediaSearchAppTests: XCTestCase {
+class PhotoCollectionViewCellTests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
+    func testPhotoCellConfiguresCorrectly() {
+        let cell = PhotoCollectionViewCell()
+        
+        let photo = Photo(id: "1",
+                          description: "Test Description",
+                          urls: PhotoURLs(
+                              small: "https://via.placeholder.com/150",
+                              regular: "https://via.placeholder.com/600"
+                          ),
+                          user: User(name: "Test User"))
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
+        cell.configure(with: photo)
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+        XCTAssertEqual(cell.descriptionLabel.text, "Test Description")
+        
+        let expectation = self.expectation(description: "Image Loaded")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            XCTAssertNotNil(cell.imageView.image)
+            expectation.fulfill()
         }
+
+        waitForExpectations(timeout: 5.0, handler: nil)
+    }
+}
+
+class UnsplashAPIClientTests: XCTestCase {
+
+    func testSearchPhotosSuccess() {
+        let client = UnsplashAPIClient()
+        let expectation = self.expectation(description: "Photos fetched")
+        
+        client.searchPhotos(query: "cats", page: 1) { result in
+            switch result {
+            case .success(let photos):
+                XCTAssertNotNil(photos)
+                XCTAssertTrue(photos.count > 0)
+            case .failure(let error):
+                XCTFail("Failed to fetch photos: \(error)")
+            }
+            expectation.fulfill()
+        }
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+}
+
+class ViewControllerTests: XCTestCase {
+
+    var viewController: ViewController!
+
+    override func setUp() {
+        super.setUp()
+        viewController = ViewController()
+        viewController.loadViewIfNeeded()
+    }
+
+    func testSegmentedControlInitialValue() {
+        XCTAssertEqual(viewController.segmentedControl.selectedSegmentIndex, 0)
+    }
+
+    func testCollectionViewHasCells() {
+        guard let collectionView = viewController.collectionView else {
+            XCTFail("Collection view is nil")
+            return
+        }
+
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: IndexPath(row: 0, section: 0)) as? PhotoCollectionViewCell
+        XCTAssertNotNil(cell)
     }
 
 }
+
+class PhotoDetailViewControllerTests: XCTestCase {
+
+    func testPhotoDetailViewControllerDisplaysCorrectData() {
+        let photo = Photo(id: "1", description: "Test", urls: PhotoURLs(small: "", regular: ""), user: User(name: "Author"))
+        let detailVC = PhotoDetailViewController()
+        detailVC.photo = photo
+        detailVC.loadViewIfNeeded()
+
+        XCTAssertEqual(detailVC.descriptionLabel.text, "Test")
+        XCTAssertEqual(detailVC.authorLabel.text, "Автор: Author")
+    }
+}
+
+
