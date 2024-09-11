@@ -183,3 +183,21 @@ MediaSearchApp позволяет пользователям искать изо
 - **Поиск**: Введите запрос в строку поиска и нажмите "Поиск". Результаты отобразятся в виде плиток.
 - **Просмотр Деталей**: Нажмите на плитку с изображением для просмотра детальной информации.
 - **Функции Экранов**: На экране с детальной информацией можно сохранить изображение или поделиться им.
+
+## Скриншот Приложения
+
+<img width="261" alt="Screenshot 2024-09-11 at 18 48 44" src="https://github.com/user-attachments/assets/c1a89a51-05de-4412-9783-bc8c08d5cf28">
+
+<img width="261" alt="Screenshot 2024-09-11 at 18 49 14" src="https://github.com/user-attachments/assets/18374f15-ecc3-40fa-af0c-2093c8c47b5d">
+
+<img width="261" alt="Screenshot 2024-09-11 at 18 49 29" src="https://github.com/user-attachments/assets/41106ea7-d680-4891-b081-e298d388115e">
+
+<img width="261" alt="Screenshot 2024-09-11 at 18 49 44" src="https://github.com/user-attachments/assets/3b974921-6ee3-457e-90ea-007bbb8ae8d3">
+
+
+https://github.com/user-attachments/assets/2a2f2c21-1ae8-4419-b632-069d6e2e52d8
+
+
+
+
+
