@@ -194,6 +194,8 @@ MediaSearchApp позволяет пользователям искать изо
 
 <img width="261" alt="Screenshot 2024-09-11 at 18 49 44" src="https://github.com/user-attachments/assets/3b974921-6ee3-457e-90ea-007bbb8ae8d3">
 
+<img width="261" alt="Screenshot 2024-09-11 at 19 00 56" src="https://github.com/user-attachments/assets/bfafde99-c624-4de0-a7e3-3d10b7e3912b">
+
 
 https://github.com/user-attachments/assets/2a2f2c21-1ae8-4419-b632-069d6e2e52d8
 
